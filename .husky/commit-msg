@@ -1,0 +1,26 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# contents of commit message in file at $1
+commitMessage="$(cat $1)"
+#echo "message: $commitMessage"
+
+cd demo
+
+# rebuild dist
+npm run build
+
+# copy index.html to dist
+cp index.html ./dist
+
+# enter gh-pages branch
+cd dist
+
+# stage all files
+git add -A
+
+# commit all files with commit message from main
+git commit -m "$commitMessage"
+
+# push to github
+git push origin gh-pages
