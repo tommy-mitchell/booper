@@ -3,8 +3,8 @@
     "scripts": {
         "build": "sass src/main.scss dist/main.css && budo src/index.ts src/boops.ts --output [ --file dist/browser.js] --no-debug --no-stream -- -t [ browserify-markdown ]",
         "sass": "sass --watch src/main.scss dist/main.css",
-        "serve": "budo src/index.ts src/boops.ts --serve dist/browser.js --live -- -t [ browserify-markdown ]",
-        "serve2": "budo src/index.ts src/boops2.ts --serve dist/browser.js --live -p 9900 -- -t [ browserify-markdown ]",
+        "serve": "budo src/index.ts src/boops.ts --serve browser.js --live -- -t [ browserify-markdown ]",
+        "serve2": "budo src/index.ts src/boops2.ts --serve browser.js --live -p 9900 -- -t [ browserify-markdown ]",
         "dev": "concurrently \"yarn sass\" \"yarn serve\"",
         "dev2": "concurrently \"yarn sass\" \"yarn serve2\""
     },
