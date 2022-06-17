@@ -9,6 +9,11 @@ enum CSSMatrix {
     TranslateY = "f"
 }
 
+export interface Point {
+    x: number;
+    y: number;
+}
+
 export function zeroTransform(): Transform
 {
     return {
@@ -75,6 +80,17 @@ export function getTransform(element: HTMLElement): Transform
         rotate: rotate,
         scale:  scale
     };
+}
+
+// https://stackoverflow.com/a/42111623/10292952
+export function getRelativePosition(event: MouseEvent): Point
+{
+    const rect: DOMRect = (event.target as Element).getBoundingClientRect();
+
+    const xPos: number = event.clientX - rect.left;
+    const yPos: number = event.clientY - rect.top;
+
+    return { x: xPos, y: yPos };
 }
 
 export default {

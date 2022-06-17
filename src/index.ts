@@ -56,24 +56,35 @@ export function makeDefaultBoops()
             const boopClass: string = Array.from(boopElement.classList).filter(name => name.startsWith("boop"))[0];
 
             /** The indexes of any transform specified. */
-            const transformIndexes: number[] = [
+            /*const transformIndexes: number[] = [
                 boopClass.indexOf("x-"),
                 boopClass.indexOf("y-"),
                 boopClass.indexOf("rotate-"),
                 boopClass.indexOf("scale-")
+            ];*/
+
+            /** The indexes of any transform specified. */
+            const transformIndexes: { transformIndex: number, toValueOffset: number }[] = [
+                { transformIndex: boopClass.indexOf("x-"),      toValueOffset: 2 },
+                { transformIndex: boopClass.indexOf("y-"),      toValueOffset: 2 },
+                { transformIndex: boopClass.indexOf("rotate-"), toValueOffset: 7 },
+                { transformIndex: boopClass.indexOf("scale-"),  toValueOffset: 6 }
             ];
 
             let config: Partial<Transform> = {};
 
             // Parse the `boopClass` to create the options for the given element
-            transformIndexes.forEach(transformIndex => {
+            transformIndexes.forEach( ({ transformIndex, toValueOffset }) => {
                 if(transformIndex !== -1)
                 {
                     // "boop-x-10-rotate-50" -> "x, 10, rotate, 50"
-                    const boopDetails: string[] = boopClass.substring(transformIndex).split('-');
+                    /*const boopDetails: string[] = boopClass.substring(transformIndex).split('-');
 
                     const transform: string = boopDetails[0];
-                    const toValue:   number = Number(boopDetails[1]);
+                    const toValue:   number = Number(boopDetails[1]);*/
+
+                    const transform: string = boopClass.substring(transformIndex).split('-')[0];
+                    const toValue:   number = Number(boopClass.substring(transformIndex + toValueOffset));
 
                     // { x: 10 }
                     config[transform] = toValue;

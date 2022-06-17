@@ -1,14 +1,10 @@
 import { Spring, PartialSpringConfig, SpringListenerFn } from "wobble";
 import Deferred from "./deferred";
 import * as Utils from "./utils";
+import { Point } from "./utils";
 
 interface Dictionary<T> {
     [index: string]: T;
-}
-
-interface Point {
-    x: number;
-    y: number;
 }
 
 export interface Transform {
@@ -27,6 +23,11 @@ type TriggerCondition = (details: BoopDetails, event: Event) => boolean;
 type StopCondition  = (handler: () => void) => void;
 export type ValueUpdater = (details: BoopDetails, event: Event) => void;
 
+interface EventTrigger {
+    event:    string;
+    trigger?: TriggerCondition;
+}
+
 export interface BoopOptions extends Transform {
     /** The timeout for the default end callback. (default: `150ms`) */
     timeout: number;
@@ -35,9 +36,11 @@ export interface BoopOptions extends Transform {
     /** Any parameters for the spring. (default: `{ stiffness: 300, damping: 10 }`) */
     springConfig?: PartialSpringConfig;
     /** A set of `Event`s on which to conditionally trigger the 'boop' effect. */
-    events: Dictionary<TriggerCondition>;
+    //events: EventTrigger[];
+    events: string[];
+    triggers: Dictionary<TriggerCondition>;
     /** A callback that is fired whenever the 'boop' effect is triggered to update any options. */
-    valueUpdater: ValueUpdater | undefined;
+    valueUpdater?: ValueUpdater;
     [index: string]: any;
 }
 
@@ -63,14 +66,29 @@ const DefaultBoopOptions: BoopOptions = {
         stiffness: 300,
         damping:   10
     },
-    events: {
+    events: [
+        "mouseenter"
+    ],
+    triggers: {
+        "mouseenter": (details: BoopDetails, event: Event) => {
+            if(details.initialMousePos === undefined)
+                return true;
+
+            const mousePos = Utils.getRelativePosition(event as MouseEvent);
+            
+            // Can't boop if mouse has barely moved (no accidental double booping) - (true if moved enough)
+            return (Math.abs(details.initialMousePos.x - mousePos.x) > 15) ||
+                   (Math.abs(details.initialMousePos.y - mousePos.y) > 15);
+        }
+    }
+    /*events: {
         // The default 'boop' effect triggers on `mouseenter` of the
         // `baseElement`.  The effect has a chance of moving off the
         // cursor while animating and retriggering itself when
         // returning to its starting position. This conditional checks
         // that the cursor has moved a significant enough distance
         // between `mouseenter`s before allowing the 'boop' to trigger
-        ['mouseenter']: (details: BoopDetails, event: Event) => {
+        "mouseenter": (details: BoopDetails, event: Event) => {
             if(details.initialMousePos === undefined)
                 return true;
             
@@ -78,9 +96,7 @@ const DefaultBoopOptions: BoopOptions = {
             return (Math.abs(details.initialMousePos.x - (event as MouseEvent).screenX) > 15) ||
                    (Math.abs(details.initialMousePos.y - (event as MouseEvent).screenY) > 15);
         }
-    },
-    // The default 'boop' effect does not change its `toValue`
-    valueUpdater: undefined
+    }*/
 }
 
 export class BoopElement
@@ -93,7 +109,6 @@ export class BoopElement
     private _base:            Transform;
     /** A collection of `Springs` for each CSS transform defined in `_options`. */
     private _transforms:      Dictionary<Spring> = {};
-
     /** The CSS transform for the current 'boop' effect animation step. */
     private _current:         Transform;
     /** If the 'boop' effect is active (i.e., the `Spring`s are still animating towards their `toValue`s). */
@@ -105,29 +120,72 @@ export class BoopElement
 
     constructor(element: HTMLElement, options: Partial<BoopOptions>)
     {
+        this._element = element;
+        this._options = this._parseOptions(options);
+        this._base    = Utils.getTransform(this._element);
+        this._current = this._base;
+
+        // Iteratively parse applicable `toValue`s
+        this._parseTransforms();
+
+        this._deferred = new Deferred<void>();
+    }
+
+    /**
+     * Merges any provided `options` with the `DefaultBoopOptions`, handling any necessary overrides.
+     */
+    private _parseOptions(options: Partial<BoopOptions>): BoopOptions
+    {
         // Override the default options with any provided options
         const optionsWithFallbacks: BoopOptions = { ...DefaultBoopOptions, ...options };
 
         // Only want the events from the provided options if they're defined
-        if(options.events)
-            optionsWithFallbacks.events = options.events;
+        //if(options.events)
+        //    optionsWithFallbacks.events = options.events;
+        optionsWithFallbacks.triggers = options.triggers ?? {};
 
         // Include necessary spring config options (no raf)
         optionsWithFallbacks.springConfig = { ...{ requestAnimationFrame: false }, ...DefaultBoopOptions.springConfig, ...options.springConfig };
 
-        this._element = element;
-        this._options = optionsWithFallbacks;
-        this._base    = Utils.getTransform(this._element);
-        this._current = this._base;
-
         // TODO: better way of getting default
         //if(options.timeout !== DefaultBoopOptions.timeout)
-            this._options.endCallback = handler => setTimeout(handler, this._options.timeout);
+            optionsWithFallbacks.endCallback = handler => setTimeout(handler, this._options.timeout);
 
-        // Iteratively parse applicable `toValue`s
-        this.parseTransforms();
+        return optionsWithFallbacks;
+    }
 
-        this._deferred = new Deferred<void>();
+    /**
+     * Iteratively parse any transforms defined in `_options` and set/create `Spring`s for them.
+     */
+    private _parseTransforms(): void
+    {
+        // Create a spring for any value different from the base transform
+        Object.keys(this._base).forEach(transform => {
+            const toValue: number = this._options[transform];
+            const baseCSS: number = this._base[transform];
+
+            // 
+            if(toValue !== baseCSS)
+            {
+                //console.log({ ...this._options.springConfig, fromValue: baseCSS, toValue: baseCSS + toValue }, transform);
+
+                // If a spring already exists for the given transform, change its `toValue`
+                if(this._transforms[transform] !== undefined)
+                    this._transforms[transform].setToValue(toValue);
+                else
+                {
+                    // Create a spring for the given transform if it doesn't already exist
+                    const spring = this._transforms[transform] = new Spring({ 
+                        ...this._options.springConfig,
+                        fromValue: baseCSS,
+                        toValue: baseCSS + toValue
+                    });
+
+                    // Update the given transform on each 'step'
+                    spring.onUpdate(s => this._current[transform] = s.currentValue);
+                }
+            }
+        });
     }
 
     /**
@@ -135,7 +193,7 @@ export class BoopElement
      */
     public get triggers(): string[]
     {
-        return Object.keys(this._options.events);
+        return this._options.events;
     }
 
     /**
@@ -166,15 +224,16 @@ export class BoopElement
                 //else
                 //    console.log(spring.isAnimating, spring)
             }
+            /*else
+                this._current[transform] = this._options[transform];*/
         }
 
         // Finished if all springs are done
-        if(hasFinished)
+        if(hasFinished && !this._isBooped)
         {
-            // Remove any applied CSS transformations
             this._element.style.transform = "";
-            // Unset the initial mouse position
             this._initialMousePos = undefined;
+
             // Tell the boop manager that the 'boop' effect for this element is finished
             this._deferred.resolve();
         }
@@ -185,59 +244,24 @@ export class BoopElement
         }
     }
 
-    /**
-     * Iteratively parse any transforms defined in `_options` and set/create `Spring`s for them.
-     */
-    private parseTransforms(): void
-    {
-        // Create a spring for any value different from the base transform
-        Object.keys(this._base).forEach(transform => {
-            const toValue: number = this._options[transform];
-            const baseCSS: number = this._base[transform];
-
-            // 
-            if(toValue !== baseCSS)
-            {
-                //console.log({ ...this._options.springConfig, fromValue: baseCSS, toValue: baseCSS + toValue }, transform);
-
-                // If a spring already exists for the given transform, change its `toValue`
-                if(this._transforms[transform] !== undefined)
-                    this._transforms[transform].setToValue(toValue);
-                else
-                {
-                    // Create a spring for the given transform if it doesn't already exist
-                    const spring = this._transforms[transform] = new Spring({ ...this._options.springConfig, fromValue: baseCSS, toValue: baseCSS + toValue });
-
-                    // Set its listener
-                    spring.onUpdate(s => {
-                        // Update the given transform
-                        this._current[transform] = s.currentValue;
-                    });
-                }
-            }
-        });
-    }
+    
 
     /**
      * Start the 'boop' effect if it has not already started.
      */
-    private doBoop(): void
+    private _doBoop(): void
     {
-        // Don't restart if 'boop' effect has already been triggered
         if(this._isBooped)
             return;
 
-        // Mark element as animating
         this._isBooped = true;
-
-        // Reset style
         this._element.style.transform = "";
 
         // Start every spring
         for(const [transform, spring] of Object.entries(this._transforms))
         {
             // Add reset listener if spring is not currently active
-            if(spring._listeners.length == 1) // only has `onUpdate`
+            if(spring._listeners.length === 1) // only has `onUpdate`
             {
                 // Reset spring to base CSS value once 'boop' effect has ended
                 const reset: SpringListenerFn = (spring: Spring) => {
@@ -248,8 +272,7 @@ export class BoopElement
                 spring.onUpdate(reset);
             }
 
-            // Reset the spring and start it
-            //spring.setToValue(this._base[transform] + this._options[transform]).start();
+            // Reset spring and start it
             spring.updateConfig({
                 fromValue: this._base[transform],
                 toValue:   this._base[transform] + this._options[transform]
@@ -281,33 +304,34 @@ export class BoopElement
      */
     public trigger(event: Event): Promise<void> | null
     {
-        const conditional: TriggerCondition = this._options.events[event.type]?.bind(this);
-
-        if(conditional(this._boopDetails, event))
+        if(this._options.events.includes(event.type))
         {
-            // Update `toValue`s if a handler is provided
-            if(this._options.valueUpdater)
+            const triggerConditional: TriggerCondition | undefined = this._options.triggers[event.type]?.bind(this);
+
+            // Can 'boop' if no condition or if conditional returns true
+            if(!triggerConditional || triggerConditional(this._boopDetails, event))
             {
-                // Set initial mouse position to the screen coordinates if triggered by a mouse
-                if(event instanceof MouseEvent)
-                    this._initialMousePos = { x: event.screenX, y: event.screenY };
+                // Update `toValue`s if a handler is provided
+                if(this._options.valueUpdater)
+                {
+                    // Set initial mouse position to the screen coordinates if triggered by a mouse
+                    if(event instanceof MouseEvent)
+                        this._initialMousePos = Utils.getRelativePosition(event);
+        
+                    // Update `toValue`s and parse any that changed
+                    this._options.valueUpdater(this._boopDetails, event);
+                    this._parseTransforms();
+                }
 
-                // Update `toValue`s
-                this._options.valueUpdater(this._boopDetails, event);
-
-                // Iteratively parse applicable `toValue`s
-                this.parseTransforms();
+                // Create a new Promise if not currently animating
+                if(this._deferred.settled)
+                    this._deferred.reset();
+        
+                this._doBoop();
+        
+                // Return a Promise to the boop manager
+                return this._deferred.promise;
             }
-
-            // Create a new Promise if not currently animating
-            if(this._deferred.settled)
-                this._deferred.reset();
-
-            // Trigger 'boop' effect
-            this.doBoop();
-
-            // Return a Promise to the boop manager
-            return this._deferred.promise;
         }
 
         // Since the 'boop' effect wasn't triggered, don't return a Promise

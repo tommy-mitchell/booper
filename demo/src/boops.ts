@@ -3,17 +3,23 @@ import { newBoopClass, newBoopElement, ValueUpdater, makeDefaultBoops } from "bo
 makeDefaultBoops();
 
 // Custom value updater
-const rotateAwayFromMouse: ValueUpdater = (details, event) => {
-    const direction = (event as MouseEvent).offsetX < 50 ? 1 : -1;
+const rotateAwayFromMouse: ValueUpdater = ({ options }, event) => {
+    ((event: MouseEvent) => {
+        const rect = (event.target as Element).getBoundingClientRect();
+        const xPos = event.clientX - rect.left;
 
-    details.options.rotate = Math.abs(details.options.rotate) * direction;
+        // Rotate left/right depending on mouse position over the element
+        const direction = xPos < (rect.width / 2) ? 1 : -1;
+
+        options.rotate = Math.abs(options.rotate) * direction;
+    })(event as MouseEvent);
 }
 
 // Create 'boop' effects
 newBoopClass("boop-scale",  { scale: 2, rotate: 50, valueUpdater: rotateAwayFromMouse });
 newBoopClass("boop-rotate", { rotate: 30 });
 newBoopClass("boop-transX", { x: 75, timeout: 50, springConfig: { stiffness: 500, damping: 20 } });
-newBoopClass("boop-square", { y: 20, rotate: 40, valueUpdater: rotateAwayFromMouse });
+newBoopClass("boop-square", { y: 20, rotate: 40, valueUpdater: rotateAwayFromMouse, events: ["mouseenter", "click"] });
 newBoopClass("boop-button", { y: 5 }); // TODO: start on enter/click; mousedown, end on mouseup/leave (once: true)
 
 function lerp(number: number, currentScaleMin: number, currentScaleMax: number, newScaleMin: number, newScaleMax: number): number
@@ -34,22 +40,24 @@ for(let index = 0; index < 5; index++)
     const angleInRads = (angle * 3.14) / 180;
 
     const x = distance * Math.cos(angleInRads);
-    console.log(angle, angleInRads, x, ((x / distance )* 180 / 3.14))
     const y = distance * Math.sin(angleInRads);
 
-    let timing = lerp(index, 0, 4, 450, 600);
-    timing    *= 1 + index * .22;
+    //console.log(angle, angleInRads, x, ((x / distance )* 180 / 3.14))
 
-    const friction = lerp(index, 0, 4, 15, 40);
+    let timing = lerp(index, 0, 4, 450, 600);
+    timing    *= 1 + (index * .11); // .22
+
+    //const friction = lerp(index, 0, 4, 15, 40);
+    //console.log(friction);
 
     newBoopElement(circles[index], {
         x: x,
         y: y,
         timeout: timing,
-        scale: 1.4,
+        //scale: 1.4,
         springConfig: {
             stiffness: 180,
-            damping:   friction
+            damping:   15//friction
         }
     }, starTrigger);
 }

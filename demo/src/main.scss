@@ -6,6 +6,10 @@
     }
 }
 
+html {
+    height: 100vh;
+}
+
 body {
     font-family: 'Wotfard', Futura, -apple-system, sans-serif;
     line-height: 1.5;
@@ -26,7 +30,10 @@ p {
 }
 
 button {
-    margin: 0 auto;
+    &:not(#close-modal) {
+        margin: 0 auto;
+    }
+
     cursor: pointer;
     border: {
         width: medium;
@@ -161,6 +168,26 @@ $font-color-hover: #3a4144;
     }
 }
 
+#open-modal {
+    padding: 5px 20px;
+    font-size: 18px;
+    background-color: $font-color-hover;
+    color: white;
+
+    border-style: solid;
+    border-color: transparent;
+
+    &:hover {
+        background-color: white;
+        border-color: $font-color-hover;
+        color: black;
+
+        transition: background-color .25s ease-out, color .1s ease-out;
+    }
+
+    transition: .15s ease;
+}
+
 #modal-container {
     z-index: 1;
     display:  none;
@@ -198,6 +225,18 @@ $font-color-hover: #3a4144;
             padding: 10px 25px 5px;
             font-size: 30px;
             border-bottom: 2px lightgray solid;
+
+            display:         flex;
+            align-items:     center;
+            justify-content: space-between;
+
+            button#close-modal {
+                background-color: transparent;
+
+                & > svg {
+                    will-change: transform;
+                }
+            }
         }
     
         #body {
@@ -209,13 +248,32 @@ $font-color-hover: #3a4144;
                 
                 p {
                     margin-bottom: 50px;
+
+                    & > span {
+                        margin-left: 1rem;
+
+                        & > svg {
+                            vertical-align: middle;
+                            position: relative;
+                            top: -2px;
+                        }
+                    }
                 }
+            }
+        }
+
+        button#close-modal, .info-circle, .star {
+            &:hover {
+                $modal-hover-color: #666;
+
+                color: $modal-hover-color;
+                fill:  $modal-hover-color;
             }
         }
     }
     
     #modal-background {
-        background-color: rgba(0, 0, 0, .05);
+        background: linear-gradient(0, rgba(0, 0, 0, .25) 0%, rgba(0, 0, 0, .05) 25%);
 
         width:  100%;
         height: 110%;
@@ -247,10 +305,17 @@ $font-color-hover: #3a4144;
     display: inline-block;
     position: relative;
     width: min-content;
+    vertical-align: top;
+    margin-left: 1rem;
 
     > svg {
         z-index: 3;
         position: relative;
         cursor: pointer;
     }
+}
+
+.info-circle > svg {
+    will-change: transform;
+    cursor: pointer;
 }
