@@ -5,6 +5,10 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100vh;
+}
+
 body {
   font-family: "Wotfard", Futura, -apple-system, sans-serif;
   line-height: 1.5;
@@ -24,13 +28,15 @@ p {
 }
 
 button {
-  margin: 0 auto;
   cursor: pointer;
   border-width: medium;
   border-style: none;
   border-radius: 8px;
   will-change: transform;
   transition: transform 75ms cubic-bezier(0.44, 0.21, 0, 1);
+}
+button:not(#close-modal) {
+  margin: 0 auto;
 }
 button.active, button:focus {
   transform: scale(1);
@@ -128,6 +134,22 @@ button:active {
   transition: max-height 0.2s ease-in-out;
 }
 
+#open-modal {
+  padding: 5px 20px;
+  font-size: 18px;
+  background-color: #3a4144;
+  color: white;
+  border-style: solid;
+  border-color: transparent;
+  transition: 0.15s ease;
+}
+#open-modal:hover {
+  background-color: white;
+  border-color: #3a4144;
+  color: black;
+  transition: background-color 0.25s ease-out, color 0.1s ease-out;
+}
+
 #modal-container {
   z-index: 1;
   display: none;
@@ -160,6 +182,15 @@ button:active {
   padding: 10px 25px 5px;
   font-size: 30px;
   border-bottom: 2px lightgray solid;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+#modal-container #modal #header button#close-modal {
+  background-color: transparent;
+}
+#modal-container #modal #header button#close-modal > svg {
+  will-change: transform;
 }
 #modal-container #modal #body {
   margin: 20px 40px;
@@ -171,8 +202,20 @@ button:active {
 #modal-container #modal #body #list p {
   margin-bottom: 50px;
 }
+#modal-container #modal #body #list p > span {
+  margin-left: 1rem;
+}
+#modal-container #modal #body #list p > span > svg {
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+#modal-container #modal button#close-modal:hover, #modal-container #modal .info-circle:hover, #modal-container #modal .star:hover {
+  color: #666;
+  fill: #666;
+}
 #modal-container #modal-background {
-  background-color: rgba(0, 0, 0, 0.05);
+  background: linear-gradient(0, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.05) 25%);
   width: 100%;
   height: 110%;
   transform: translateY(-50%);
@@ -200,10 +243,17 @@ button:active {
   display: inline-block;
   position: relative;
   width: min-content;
+  vertical-align: top;
+  margin-left: 1rem;
 }
 .star > svg {
   z-index: 3;
   position: relative;
+  cursor: pointer;
+}
+
+.info-circle > svg {
+  will-change: transform;
   cursor: pointer;
 }
 

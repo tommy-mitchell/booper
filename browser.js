@@ -1,22 +1,28 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
-module.exports = '<p>These are <a href="https://www.joshwcomeau.com/react/boop">boops</a>!</p>\n<p>This library provides a simple way of creating <em>Boop</em> effects in vanilla JavaScript using a fork of <a href="https://github.com/skevy/wobble"><em>wobble</em></a>, a tiny library for simulating spring physics.</p>\n<p>The effects on this page are an exaggerated demo of what can be created – in practice, they\'re far better as subtle effects, like the chevron indicator next to the accordion button above. Open the example modal below to see some simpler examples.</p>\n<p>For more information, check out the <a href="">NPM page</a>.</p>\n';
+module.exports = '<p>These are <a href="https://www.joshwcomeau.com/react/boop">boops</a>!</p>\n<p>This library provides a simple way of creating <em>Boop</em> effects in vanilla JavaScript using a fork of <a href="https://github.com/tommy-mitchell/wobble"><em>wobble</em></a>, a tiny library for simulating spring physics.</p>\n<p>The effects on this page are an exaggerated demo of what can be created – in practice, they\'re far better as subtle effects, like the chevron indicator next to the accordion button above. Open the example modal below to see some simpler examples.</p>\n<p>For more information, check out the <a href="#">NPM page</a>.</p>\n';
 },{}],2:[function(require,module,exports){
 "use strict";var _dist = require('booper/dist');
 
 _dist.makeDefaultBoops.call(void 0, );
 
 // Custom value updater
-const rotateAwayFromMouse = (details, event) => {
-    const direction = (event ).offsetX < 50 ? 1 : -1;
+const rotateAwayFromMouse = ({ options }, event) => {
+    ((event) => {
+        const rect = (event.target ).getBoundingClientRect();
+        const xPos = event.clientX - rect.left;
 
-    details.options.rotate = Math.abs(details.options.rotate) * direction;
+        // Rotate left/right depending on mouse position over the element
+        const direction = xPos < (rect.width / 2) ? 1 : -1;
+
+        options.rotate = Math.abs(options.rotate) * direction;
+    })(event );
 }
 
 // Create 'boop' effects
 _dist.newBoopClass.call(void 0, "boop-scale",  { scale: 2, rotate: 50, valueUpdater: rotateAwayFromMouse });
 _dist.newBoopClass.call(void 0, "boop-rotate", { rotate: 30 });
 _dist.newBoopClass.call(void 0, "boop-transX", { x: 75, timeout: 50, springConfig: { stiffness: 500, damping: 20 } });
-_dist.newBoopClass.call(void 0, "boop-square", { y: 20, rotate: 40, valueUpdater: rotateAwayFromMouse });
+_dist.newBoopClass.call(void 0, "boop-square", { y: 20, rotate: 40, valueUpdater: rotateAwayFromMouse, events: ["mouseenter", "click"] });
 _dist.newBoopClass.call(void 0, "boop-button", { y: 5 }); // TODO: start on enter/click; mousedown, end on mouseup/leave (once: true)
 
 function lerp(number, currentScaleMin, currentScaleMax, newScaleMin, newScaleMax)
@@ -37,22 +43,24 @@ for(let index = 0; index < 5; index++)
     const angleInRads = (angle * 3.14) / 180;
 
     const x = distance * Math.cos(angleInRads);
-    console.log(angle, angleInRads, x, ((x / distance )* 180 / 3.14))
     const y = distance * Math.sin(angleInRads);
 
-    let timing = lerp(index, 0, 4, 450, 600);
-    timing    *= 1 + index * .22;
+    //console.log(angle, angleInRads, x, ((x / distance )* 180 / 3.14))
 
-    const friction = lerp(index, 0, 4, 15, 40);
+    let timing = lerp(index, 0, 4, 450, 600);
+    timing    *= 1 + (index * .11); // .22
+
+    //const friction = lerp(index, 0, 4, 15, 40);
+    //console.log(friction);
 
     _dist.newBoopElement.call(void 0, circles[index], {
         x: x,
         y: y,
         timeout: timing,
-        scale: 1.4,
+        //scale: 1.4,
         springConfig: {
             stiffness: 180,
-            damping:   friction
+            damping:   15//friction
         }
     }, starTrigger);
 }
@@ -69,13 +77,16 @@ accordion.querySelector("button").addEventListener("click", () => {
 });
 
 // Open/close modal on click
-const modal    = document.querySelector("#modal-container") ;
-const modalBtn = document.querySelector("#open-modal") ;
-const modalBg  = document.querySelector("#modal-background") ;
-modalBtn.addEventListener("click", () => modal.classList.add("show"));
+const modal     = document.querySelector("#modal-container")  ;
+const modalOBtn = document.querySelector("#open-modal")       ;
+const modalXBtn = document.querySelector("#close-modal")      ;
+const modalBg   = document.querySelector("#modal-background") ;
+
+modalOBtn.addEventListener("click", () => modal.classList.add("show"));
+modalXBtn.addEventListener("click", () => modal.classList.remove("show"));
 modalBg.addEventListener("click", () => modal.classList.remove("show"));
 },{"./about.md":1}],4:[function(require,module,exports){
-"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { newObj[key] = obj[key]; } } } newObj.default = obj; return newObj; } } function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _wobble = require('wobble');
+"use strict";Object.defineProperty(exports, "__esModule", {value: true}); function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { newObj[key] = obj[key]; } } } newObj.default = obj; return newObj; } } function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; } function _nullishCoalesce(lhs, rhsFn) { if (lhs != null) { return lhs; } else { return rhsFn(); } } function _optionalChain(ops) { let lastAccessLHS = undefined; let value = ops[0]; let i = 1; while (i < ops.length) { const op = ops[i]; const fn = ops[i + 1]; i += 2; if ((op === 'optionalAccess' || op === 'optionalCall') && value == null) { return undefined; } if (op === 'access' || op === 'optionalAccess') { lastAccessLHS = value; value = fn(value); } else if (op === 'call' || op === 'optionalCall') { value = fn((...args) => value.call(lastAccessLHS, ...args)); lastAccessLHS = undefined; } } return value; }var _wobble = require('wobble');
 var _deferred2 = require('./deferred'); var _deferred3 = _interopRequireDefault(_deferred2);
 var _utils = require('./utils'); var Utils = _interopRequireWildcard(_utils);
 // TODO: unify default w/ instance timeout
@@ -93,23 +104,35 @@ const DefaultBoopOptions = {
         stiffness: 300,
         damping: 10
     },
-    events: {
+    events: [
+        "mouseenter"
+    ],
+    triggers: {
+        "mouseenter": (details, event) => {
+            if (details.initialMousePos === undefined)
+                return true;
+            const mousePos = Utils.getRelativePosition(event);
+            // Can't boop if mouse has barely moved (no accidental double booping) - (true if moved enough)
+            return (Math.abs(details.initialMousePos.x - mousePos.x) > 15) ||
+                (Math.abs(details.initialMousePos.y - mousePos.y) > 15);
+        }
+    }
+    /*events: {
         // The default 'boop' effect triggers on `mouseenter` of the
         // `baseElement`.  The effect has a chance of moving off the
         // cursor while animating and retriggering itself when
         // returning to its starting position. This conditional checks
         // that the cursor has moved a significant enough distance
         // between `mouseenter`s before allowing the 'boop' to trigger
-        ['mouseenter']: (details, event) => {
-            if (details.initialMousePos === undefined)
+        "mouseenter": (details: BoopDetails, event: Event) => {
+            if(details.initialMousePos === undefined)
                 return true;
+            
             // Can't boop if mouse has barely moved (no accidental double booping)
-            return (Math.abs(details.initialMousePos.x - event.screenX) > 15) ||
-                (Math.abs(details.initialMousePos.y - event.screenY) > 15);
+            return (Math.abs(details.initialMousePos.x - (event as MouseEvent).screenX) > 15) ||
+                   (Math.abs(details.initialMousePos.y - (event as MouseEvent).screenY) > 15);
         }
-    },
-    // The default 'boop' effect does not change its `toValue`
-    valueUpdater: undefined
+    }*/
 };
  class BoopElement {
     constructor(element, options) {
@@ -119,29 +142,63 @@ const DefaultBoopOptions = {
         this._isBooped = false;
         /** The initial screen coordinates of the mouse if the 'boop' effect is triggered on a `MouseEvent`. */
         this._initialMousePos = undefined;
+        this._element = element;
+        this._options = this._parseOptions(options);
+        this._base = Utils.getTransform(this._element);
+        this._current = this._base;
+        // Iteratively parse applicable `toValue`s
+        this._parseTransforms();
+        this._deferred = new (0, _deferred3.default)();
+    }
+    /**
+     * Merges any provided `options` with the `DefaultBoopOptions`, handling any necessary overrides.
+     */
+    _parseOptions(options) {
         // Override the default options with any provided options
         const optionsWithFallbacks = { ...DefaultBoopOptions, ...options };
         // Only want the events from the provided options if they're defined
-        if (options.events)
-            optionsWithFallbacks.events = options.events;
+        //if(options.events)
+        //    optionsWithFallbacks.events = options.events;
+        optionsWithFallbacks.triggers = _nullishCoalesce(options.triggers, () => ( {}));
         // Include necessary spring config options (no raf)
         optionsWithFallbacks.springConfig = { ...{ requestAnimationFrame: false }, ...DefaultBoopOptions.springConfig, ...options.springConfig };
-        this._element = element;
-        this._options = optionsWithFallbacks;
-        this._base = Utils.getTransform(this._element);
-        this._current = this._base;
         // TODO: better way of getting default
         //if(options.timeout !== DefaultBoopOptions.timeout)
-        this._options.endCallback = handler => setTimeout(handler, this._options.timeout);
-        // Iteratively parse applicable `toValue`s
-        this.parseTransforms();
-        this._deferred = new (0, _deferred3.default)();
+        optionsWithFallbacks.endCallback = handler => setTimeout(handler, this._options.timeout);
+        return optionsWithFallbacks;
+    }
+    /**
+     * Iteratively parse any transforms defined in `_options` and set/create `Spring`s for them.
+     */
+    _parseTransforms() {
+        // Create a spring for any value different from the base transform
+        Object.keys(this._base).forEach(transform => {
+            const toValue = this._options[transform];
+            const baseCSS = this._base[transform];
+            // 
+            if (toValue !== baseCSS) {
+                //console.log({ ...this._options.springConfig, fromValue: baseCSS, toValue: baseCSS + toValue }, transform);
+                // If a spring already exists for the given transform, change its `toValue`
+                if (this._transforms[transform] !== undefined)
+                    this._transforms[transform].setToValue(toValue);
+                else {
+                    // Create a spring for the given transform if it doesn't already exist
+                    const spring = this._transforms[transform] = new (0, _wobble.Spring)({
+                        ...this._options.springConfig,
+                        fromValue: baseCSS,
+                        toValue: baseCSS + toValue
+                    });
+                    // Update the given transform on each 'step'
+                    spring.onUpdate(s => this._current[transform] = s.currentValue);
+                }
+            }
+        });
     }
     /**
      * The events defined for this boop element to trigger its 'boop' effect.
      */
     get triggers() {
-        return Object.keys(this._options.events);
+        return this._options.events;
     }
     /**
      * Advances the 'boop' effect if it is currently animating, applying its CSS transforms and resolving
@@ -164,12 +221,12 @@ const DefaultBoopOptions = {
                 //else
                 //    console.log(spring.isAnimating, spring)
             }
+            /*else
+                this._current[transform] = this._options[transform];*/
         }
         // Finished if all springs are done
-        if (hasFinished) {
-            // Remove any applied CSS transformations
+        if (hasFinished && !this._isBooped) {
             this._element.style.transform = "";
-            // Unset the initial mouse position
             this._initialMousePos = undefined;
             // Tell the boop manager that the 'boop' effect for this element is finished
             this._deferred.resolve();
@@ -180,46 +237,17 @@ const DefaultBoopOptions = {
         }
     }
     /**
-     * Iteratively parse any transforms defined in `_options` and set/create `Spring`s for them.
-     */
-    parseTransforms() {
-        // Create a spring for any value different from the base transform
-        Object.keys(this._base).forEach(transform => {
-            const toValue = this._options[transform];
-            const baseCSS = this._base[transform];
-            // 
-            if (toValue !== baseCSS) {
-                //console.log({ ...this._options.springConfig, fromValue: baseCSS, toValue: baseCSS + toValue }, transform);
-                // If a spring already exists for the given transform, change its `toValue`
-                if (this._transforms[transform] !== undefined)
-                    this._transforms[transform].setToValue(toValue);
-                else {
-                    // Create a spring for the given transform if it doesn't already exist
-                    const spring = this._transforms[transform] = new (0, _wobble.Spring)({ ...this._options.springConfig, fromValue: baseCSS, toValue: baseCSS + toValue });
-                    // Set its listener
-                    spring.onUpdate(s => {
-                        // Update the given transform
-                        this._current[transform] = s.currentValue;
-                    });
-                }
-            }
-        });
-    }
-    /**
      * Start the 'boop' effect if it has not already started.
      */
-    doBoop() {
-        // Don't restart if 'boop' effect has already been triggered
+    _doBoop() {
         if (this._isBooped)
             return;
-        // Mark element as animating
         this._isBooped = true;
-        // Reset style
         this._element.style.transform = "";
         // Start every spring
         for (const [transform, spring] of Object.entries(this._transforms)) {
             // Add reset listener if spring is not currently active
-            if (spring._listeners.length == 1) // only has `onUpdate`
+            if (spring._listeners.length === 1) // only has `onUpdate`
              {
                 // Reset spring to base CSS value once 'boop' effect has ended
                 const reset = (spring) => {
@@ -228,8 +256,7 @@ const DefaultBoopOptions = {
                 };
                 spring.onUpdate(reset);
             }
-            // Reset the spring and start it
-            //spring.setToValue(this._base[transform] + this._options[transform]).start();
+            // Reset spring and start it
             spring.updateConfig({
                 fromValue: this._base[transform],
                 toValue: this._base[transform] + this._options[transform]
@@ -255,25 +282,26 @@ const DefaultBoopOptions = {
      * Trigger the 'boop' effect on this boop element if the given `event` is defined on it.
      */
     trigger(event) {
-        const conditional = _optionalChain([this, 'access', _ => _._options, 'access', _2 => _2.events, 'access', _3 => _3[event.type], 'optionalAccess', _4 => _4.bind, 'call', _5 => _5(this)]);
-        if (conditional(this._boopDetails, event)) {
-            // Update `toValue`s if a handler is provided
-            if (this._options.valueUpdater) {
-                // Set initial mouse position to the screen coordinates if triggered by a mouse
-                if (event instanceof MouseEvent)
-                    this._initialMousePos = { x: event.screenX, y: event.screenY };
-                // Update `toValue`s
-                this._options.valueUpdater(this._boopDetails, event);
-                // Iteratively parse applicable `toValue`s
-                this.parseTransforms();
+        if (this._options.events.includes(event.type)) {
+            const triggerConditional = _optionalChain([this, 'access', _ => _._options, 'access', _2 => _2.triggers, 'access', _3 => _3[event.type], 'optionalAccess', _4 => _4.bind, 'call', _5 => _5(this)]);
+            // Can 'boop' if no condition or if conditional returns true
+            if (!triggerConditional || triggerConditional(this._boopDetails, event)) {
+                // Update `toValue`s if a handler is provided
+                if (this._options.valueUpdater) {
+                    // Set initial mouse position to the screen coordinates if triggered by a mouse
+                    if (event instanceof MouseEvent)
+                        this._initialMousePos = Utils.getRelativePosition(event);
+                    // Update `toValue`s and parse any that changed
+                    this._options.valueUpdater(this._boopDetails, event);
+                    this._parseTransforms();
+                }
+                // Create a new Promise if not currently animating
+                if (this._deferred.settled)
+                    this._deferred.reset();
+                this._doBoop();
+                // Return a Promise to the boop manager
+                return this._deferred.promise;
             }
-            // Create a new Promise if not currently animating
-            if (this._deferred.settled)
-                this._deferred.reset();
-            // Trigger 'boop' effect
-            this.doBoop();
-            // Return a Promise to the boop manager
-            return this._deferred.promise;
         }
         // Since the 'boop' effect wasn't triggered, don't return a Promise
         return null;
@@ -445,20 +473,30 @@ function addBoops(triggerElement, options) {
             // Find the 'boop' class for the given element
             const boopClass = Array.from(boopElement.classList).filter(name => name.startsWith("boop"))[0];
             /** The indexes of any transform specified. */
-            const transformIndexes = [
+            /*const transformIndexes: number[] = [
                 boopClass.indexOf("x-"),
                 boopClass.indexOf("y-"),
                 boopClass.indexOf("rotate-"),
                 boopClass.indexOf("scale-")
+            ];*/
+            /** The indexes of any transform specified. */
+            const transformIndexes = [
+                { transformIndex: boopClass.indexOf("x-"), toValueOffset: 2 },
+                { transformIndex: boopClass.indexOf("y-"), toValueOffset: 2 },
+                { transformIndex: boopClass.indexOf("rotate-"), toValueOffset: 7 },
+                { transformIndex: boopClass.indexOf("scale-"), toValueOffset: 6 }
             ];
             let config = {};
             // Parse the `boopClass` to create the options for the given element
-            transformIndexes.forEach(transformIndex => {
+            transformIndexes.forEach(({ transformIndex, toValueOffset }) => {
                 if (transformIndex !== -1) {
                     // "boop-x-10-rotate-50" -> "x, 10, rotate, 50"
-                    const boopDetails = boopClass.substring(transformIndex).split('-');
-                    const transform = boopDetails[0];
-                    const toValue = Number(boopDetails[1]);
+                    /*const boopDetails: string[] = boopClass.substring(transformIndex).split('-');
+
+                    const transform: string = boopDetails[0];
+                    const toValue:   number = Number(boopDetails[1]);*/
+                    const transform = boopClass.substring(transformIndex).split('-')[0];
+                    const toValue = Number(boopClass.substring(transformIndex + toValueOffset));
                     // { x: 10 }
                     config[transform] = toValue;
                 }
@@ -536,6 +574,13 @@ exports. default = {
         scale: scale
     };
 } exports.getTransform = getTransform;
+// https://stackoverflow.com/a/42111623/10292952
+ function getRelativePosition(event) {
+    const rect = event.target.getBoundingClientRect();
+    const xPos = event.clientX - rect.left;
+    const yPos = event.clientY - rect.top;
+    return { x: xPos, y: yPos };
+} exports.getRelativePosition = getRelativePosition;
 exports. default = {
     zeroTransform: zeroTransform,
     interpolateTransform: interpolateTransform,
